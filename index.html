@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
 
 <!-- ===== META PIXEL =====
      Trocar 3972213859739222 pelo ID do Pixel da Gamma (Gerenciador de Eventos do Meta).
@@ -440,6 +441,51 @@ fbq('track', 'PageView');
     .sticky-cta .container { justify-content: center; }
     .sticky-cta a { width: 100%; text-align: center; }
   }
+  /* ===== INTL-TEL-INPUT DARK THEME ===== */
+  .iti { width: 100%; }
+  .iti__selected-country {
+    background: var(--preto-2);
+    border: 2px solid var(--preto-4);
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 0 10px;
+    gap: 6px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .iti__selected-country:hover { background: var(--preto); }
+  .iti__selected-dial-code { color: var(--branco); font-family: 'Inter', sans-serif; font-size: 15px; }
+  .iti__arrow { border-top-color: var(--cinza); margin-left: 4px; }
+  .iti__arrow--up { border-bottom-color: var(--cinza); }
+  .iti__tel-input { border-radius: 0 6px 6px 0 !important; }
+  .iti__country-list {
+    background: var(--preto-2);
+    border: 2px solid var(--preto-4);
+    border-radius: 8px;
+    color: var(--branco);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .iti__country.iti__highlight,
+  .iti__country:hover { background: var(--preto-3); }
+  .iti__divider { border-bottom-color: var(--preto-4); }
+  .iti__dial-code { color: var(--cinza); }
+  .iti--container { z-index: 9999; }
+  .iti__flag { box-shadow: none; }
+  .iti__search-input {
+    background: var(--preto-3);
+    border: 2px solid var(--preto-4);
+    color: var(--branco);
+    font-family: 'Inter', sans-serif;
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+  .iti__search-input::placeholder { color: var(--cinza); }
+  .iti.iti--focus .iti__selected-country {
+    border-color: var(--laranja);
+    background: var(--preto);
+  }
+
   @media (max-width: 520px) {
     .nav-login { display: none; }
     .mentor-photo img { width: 200px; height: 200px; }
@@ -507,7 +553,7 @@ fbq('track', 'PageView');
         <input type="email" id="email" name="email" required autocomplete="email" placeholder="seu@email.com">
 
         <label for="whatsapp">WhatsApp</label>
-        <input type="tel" id="whatsapp" name="whatsapp" required autocomplete="tel" placeholder="(11) 99999-9999" inputmode="numeric">
+        <input type="tel" id="whatsapp" name="whatsapp" required autocomplete="tel" placeholder="(11) 99999-9999">
         <p class="field-hint">Enviamos o PDF por aqui também. Zero spam — só análises gratuitas.</p>
 
         <input type="hidden" name="origem" value="lp-coleira-toro">
@@ -761,6 +807,7 @@ fbq('track', 'PageView');
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
 <script>
 /* ===== FAQ ACCORDION ===== */
 document.querySelectorAll('.faq-q').forEach(function(btn) {
@@ -790,7 +837,7 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
   });
 })();
 
-/* ===== CAPTURA DO FORM (UTMs + máscara + envio) ===== */
+/* ===== CAPTURA DO FORM (UTMs + bandeira DDI + envio) ===== */
 (function() {
   var form = document.getElementById('formCaptura');
   var btn = document.getElementById('btnEnviar');
@@ -805,17 +852,20 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
     if (el && params.get(k)) el.value = params.get(k);
   });
 
-  /* Máscara WhatsApp BR */
-  var inputWpp = document.getElementById('whatsapp');
-  function maskWhatsapp(v) {
-    v = v.replace(/\D/g, '').slice(0, 11);
-    if (v.length > 10) return '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
-    if (v.length > 6) return '(' + v.slice(0,2) + ') ' + v.slice(2,6) + '-' + v.slice(6);
-    if (v.length > 2) return '(' + v.slice(0,2) + ') ' + v.slice(2);
-    if (v.length > 0) return '(' + v;
-    return v;
-  }
-  inputWpp.addEventListener('input', function(e) { e.target.value = maskWhatsapp(e.target.value); });
+  /* intl-tel-input — seletor de bandeira + DDI */
+  var iti = window.intlTelInput(document.getElementById('whatsapp'), {
+    initialCountry: 'br',
+    separateDialCode: true,
+    preferredCountries: ['br', 'pt', 'us'],
+    utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'
+  });
+  document.getElementById('whatsapp').addEventListener('focus', function() {
+    this.closest('.iti').classList.add('iti--focus');
+  });
+  document.getElementById('whatsapp').addEventListener('blur', function() {
+    this.closest('.iti').classList.remove('iti--focus');
+  });
+
 
   function showErro(msg) {
     erro.textContent = msg; erro.style.display = 'block'; sucesso.style.display = 'none';
@@ -827,11 +877,11 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
 
     var nome = document.getElementById('nome').value.trim();
     var email = document.getElementById('email').value.trim();
-    var wpp = inputWpp.value.replace(/\D/g, '');
+    var wpp = iti.getNumber() || '';
 
     if (!nome) return showErro('Coloca seu nome aí.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErro('Email inválido. Confere e tenta de novo.');
-    if (wpp.length < 10) return showErro('WhatsApp incompleto. Coloca com DDD.');
+    if (!iti.isValidNumber()) return showErro('WhatsApp inválido. Confere o número com DDD.');
 
     btn.disabled = true; btn.textContent = 'Enviando...';
 
