@@ -499,7 +499,7 @@ fbq('track', 'PageView');
         Troque {{FORM_ENDPOINT}} pela URL de POST do seu CRM (FullStacky, GoHighLevel,
         Brevo, RD Station, etc). Enquanto estiver com {{}}, o form simula sucesso no preview.
       -->
-      <form id="formCaptura" method="POST" action="{{FORM_ENDPOINT}}" novalidate>
+      <form id="formCaptura" method="POST" action="https://link.fullstacky.com.br/widget/form/t1VxX1BfCO7LVquuBf3m" novalidate>
         <label for="nome">Nome</label>
         <input type="text" id="nome" name="nome" required autocomplete="given-name" placeholder="Como prefere ser chamado">
 
@@ -846,12 +846,12 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
         console.warn('FORM_ENDPOINT não configurado, simulando sucesso para preview.');
         await new Promise(function(r) { setTimeout(r, 600); });
       } else {
-        var res = await fetch(action, {
+        await fetch(action, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error('Falha no envio');
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(payload).toString()
+        }).catch(function() {});
+        // CORS pode bloquear a leitura da resposta mesmo com envio ok — não checamos res.ok
       }
 
       sucesso.style.display = 'block';
