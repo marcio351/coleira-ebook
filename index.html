@@ -568,7 +568,7 @@ fbq('track', 'PageView');
         <div class="sucesso" id="msgSucesso">Cadastro confirmado. Redirecionando...</div>
       </form>
 
-      <p class="legal">Ao cadastrar você concorda em receber comunicações educacionais sobre pair trading e cointegração da Gamma Quant. Pode sair quando quiser, com 1 clique, no fim de qualquer email.</p>
+      <p class="legal">Ao cadastrar você concorda em receber comunicações educacionais da Gamma Quant. Seus dados não são compartilhados com terceiros. Pode sair com 1 clique no fim de qualquer email. <a href="/privacidade.html" style="color:var(--laranja);text-decoration:underline">Política de Privacidade</a>.</p>
     </div>
   </div>
 </section>
@@ -883,9 +883,14 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
     // Atualiza o campo phone com o número internacional completo
     document.getElementById('whatsapp').value = wpp;
 
+    // Normaliza capitalização do nome
+    var nomeLimpo = nome.split(' ').map(function(w) {
+      return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
+    }).join(' ');
+
     // Persiste nome para obrigado.html usar como fallback via localStorage
     try {
-      localStorage.setItem('coleira_nome', nome);
+      localStorage.setItem('coleira_nome', nomeLimpo);
       localStorage.setItem('coleira_email', email);
     } catch (ex) {}
 
@@ -894,12 +899,30 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
       fbq('track', 'Lead', { content_name: 'E-book A Coleira Invisivel' });
     }
 
-    // Envia para n8n (proxy sem CORS) → n8n repassa para GHL
+    // Monta payload com UTMs
+    var payload = {
+      firstName: nomeLimpo,
+      email: email,
+      phone: wpp,
+      source: 'ebook-coleira-lp',
+      utm_source: form.querySelector('input[name="utm_source"]').value || '',
+      utm_medium: form.querySelector('input[name="utm_medium"]').value || '',
+      utm_campaign: form.querySelector('input[name="utm_campaign"]').value || '',
+      utm_content: form.querySelector('input[name="utm_content"]').value || '',
+      utm_term: form.querySelector('input[name="utm_term"]').value || ''
+    };
+
+    // Envia para n8n → GHL. Fallback em localStorage se falhar (recuperação manual).
     fetch('https://gamma-quant-n8n.uq0bp6.easypanel.host/webhook/coleira-lead', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firstName: nome, email: email, phone: wpp })
-    }).catch(function() {}).finally(function() {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Secret': 'gq-coleira-2026'
+      },
+      body: JSON.stringify(payload)
+    }).catch(function() {
+      try { localStorage.setItem('pending_lead_coleira', JSON.stringify(payload)); } catch(ex) {}
+    }).finally(function() {
       window.location.href = 'https://ebook.gammaquant.com.br/obrigado.html';
     });
   });
