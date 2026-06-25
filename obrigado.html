@@ -252,7 +252,9 @@ fbq('track', 'CompleteRegistration', { content_name: 'Lead Coleira' });
 </footer>
 
 <script>
-  var nome = new URLSearchParams(window.location.search).get('nome');
+  var nome = new URLSearchParams(window.location.search).get('nome')
+           || (function(){ try { return localStorage.getItem('coleira_nome'); } catch(e){ return ''; } })()
+           || '';
   if (nome) { document.getElementById('nomeUser').textContent = ', ' + nome.split(' ')[0]; }
 </script>
 

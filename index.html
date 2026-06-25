@@ -546,13 +546,13 @@ fbq('track', 'PageView');
       -->
       <form id="formCaptura" method="POST" action="https://link.fullstacky.com.br/widget/form/t1VxX1BfCO7LVquuBf3m" novalidate>
         <label for="nome">Nome</label>
-        <input type="text" id="nome" name="nome" required autocomplete="given-name" placeholder="Como prefere ser chamado">
+        <input type="text" id="nome" name="firstName" required autocomplete="given-name" placeholder="Como prefere ser chamado">
 
         <label for="email">Email</label>
         <input type="email" id="email" name="email" required autocomplete="email" placeholder="seu@email.com">
 
         <label for="whatsapp">WhatsApp</label>
-        <input type="tel" id="whatsapp" name="whatsapp" required autocomplete="tel" placeholder="(11) 99999-9999">
+        <input type="tel" id="whatsapp" name="phone" required autocomplete="tel" placeholder="(11) 99999-9999">
         <p class="field-hint">Enviamos o PDF por aqui também. Zero spam — só análises gratuitas.</p>
 
         <input type="hidden" name="origem" value="lp-coleira-toro">
@@ -866,7 +866,7 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
     erro.textContent = msg; erro.style.display = 'block'; sucesso.style.display = 'none';
   }
 
-  form.addEventListener('submit', async function(e) {
+  form.addEventListener('submit', function(e) {
     e.preventDefault();
     erro.style.display = 'none'; sucesso.style.display = 'none';
 
@@ -880,38 +880,23 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
 
     btn.disabled = true; btn.textContent = 'Enviando...';
 
+    // Atualiza o campo phone com o número internacional completo
+    document.getElementById('whatsapp').value = wpp;
+
+    // Persiste nome para obrigado.html usar como fallback via localStorage
     try {
-      var formData = new FormData(form);
-      formData.set('whatsapp', wpp);
-      var payload = {};
-      formData.forEach(function(value, key) { payload[key] = value; });
+      localStorage.setItem('coleira_nome', nome);
+      localStorage.setItem('coleira_email', email);
+    } catch (ex) {}
 
-      var action = form.action;
-      if (action.indexOf('{{') !== -1) {
-        console.warn('FORM_ENDPOINT não configurado, simulando sucesso para preview.');
-        await new Promise(function(r) { setTimeout(r, 600); });
-      } else {
-        await fetch(action, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams(payload).toString()
-        }).catch(function() {});
-        // CORS pode bloquear a leitura da resposta mesmo com envio ok — não checamos res.ok
-      }
-
-      sucesso.style.display = 'block';
-      if (typeof fbq === 'function') { fbq('track', 'Lead', { content_name: 'E-book A Coleira Invisivel' }); }
-      try {
-        localStorage.setItem('coleira_nome', nome);
-        localStorage.setItem('coleira_email', email);
-      } catch (e) {}
-      setTimeout(function() { window.location.href = LP_OBRIGADO + '?nome=' + encodeURIComponent(nome); }, 900);
-
-    } catch (err) {
-      console.error(err);
-      btn.disabled = false; btn.textContent = 'Quero o e-book grátis';
-      showErro('Tivemos um problema ao registrar seu cadastro. Tente novamente em alguns segundos.');
+    // Dispara pixel Lead antes de navegar (fbq usa sendBeacon internamente)
+    if (typeof fbq === 'function') {
+      fbq('track', 'Lead', { content_name: 'E-book A Coleira Invisivel' });
     }
+
+    // Submit nativo: sem CORS, sem CSRF — GHL recebe os dados exatamente como num iframe embed
+    // GHL deve estar configurado: Ações → Redirecionar para → https://ebook.gammaquant.com.br/obrigado.html
+    setTimeout(function() { form.submit(); }, 400);
   });
 })();
 </script>
