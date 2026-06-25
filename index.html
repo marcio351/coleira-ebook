@@ -878,6 +878,12 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErro('Email inválido. Confere e tenta de novo.');
     if (!iti.isValidNumber()) return showErro('WhatsApp inválido. Confere o número com DDD.');
 
+    // Sanitiza código duplicado: se a pessoa digitou 55+DDD, remove o 55 extra
+    // Ex: +5555319922107 → +5531992 2107 (lead digitou 55 antes do DDD)
+    if (/^\+5555\d{9,10}$/.test(wpp)) {
+      wpp = '+55' + wpp.slice(4);
+    }
+
     btn.disabled = true; btn.textContent = 'Enviando...';
 
     // Atualiza o campo phone com o número internacional completo
