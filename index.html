@@ -889,14 +889,19 @@ document.querySelectorAll('.faq-q').forEach(function(btn) {
       localStorage.setItem('coleira_email', email);
     } catch (ex) {}
 
-    // Dispara pixel Lead antes de navegar (fbq usa sendBeacon internamente)
+    // Dispara pixel Lead (sendBeacon — não bloqueia navegação)
     if (typeof fbq === 'function') {
       fbq('track', 'Lead', { content_name: 'E-book A Coleira Invisivel' });
     }
 
-    // Submit nativo: sem CORS, sem CSRF — GHL recebe os dados exatamente como num iframe embed
-    // GHL deve estar configurado: Ações → Redirecionar para → https://ebook.gammaquant.com.br/obrigado.html
-    setTimeout(function() { form.submit(); }, 400);
+    // Envia para n8n (proxy sem CORS) → n8n repassa para GHL
+    fetch('https://gamma-quant-n8n.uq0bp6.easypanel.host/webhook/coleira-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName: nome, email: email, phone: wpp })
+    }).catch(function() {}).finally(function() {
+      window.location.href = 'https://ebook.gammaquant.com.br/obrigado.html';
+    });
   });
 })();
 </script>
